@@ -2,11 +2,17 @@
 require_once 'config/loader.php';
 session_start();
 
+
 if (isset($_SESSION['zalogowany']) && $_SESSION['zalogowany'] === true) {
     $login = $_SESSION['uzytkownik']; // Pobierz login zalogowanego użytkownika
-
     $pliki = (new plik())->pobierzPlikiUzytkownika($login);
-
+    
+    // do debugowania, sprawdza sciezke
+    $plikisrc = new plik();
+    $sciezkadopliku = $plikisrc->pobierzSciezkeKataloguDlaUzytkownika($login);
+    echo $sciezkadopliku;
+ 
+ 
     // Wyświetl pliki przypisane do użytkownika
     echo "Witaj, $login! Twoje pliki:<br>";
     foreach ($pliki as $plik) {

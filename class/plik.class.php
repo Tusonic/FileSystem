@@ -6,7 +6,7 @@ class plik extends database
         $pdo = $this->startPDO();
 
         try {
-            $query = "SELECT filename, filepath FROM files WHERE user_id = (SELECT id FROM user WHERE login = :login)";
+            $query = "SELECT filename, filepath FROM files WHERE group_id = (SELECT team FROM user WHERE login = :login)";
             $statement = $pdo->prepare($query);
             $statement->bindParam(':login', $login, PDO::PARAM_STR);
             $statement->execute();
@@ -26,5 +26,85 @@ class plik extends database
             die("Błąd podczas pobierania plików: " . $e->getMessage());
         }
     }
+
+    public function wgrajPlik($login, $nazwaPliku, $tmpPliku)
+    {
+        $pdo = $this->startPDO();
+
+        try {
+            $query = "SELECT id_filepath FROM user WHERE login = :login";
+            $statement = $pdo->prepare($query);
+            $statement->bindParam(':login', $login, PDO::PARAM_STR);
+            $statement->execute();
+
+            $row = $statement->fetch(PDO::FETCH_ASSOC);
+
+            if (!$row) {
+                $this->closePDO();
+                return "Nie znaleziono użytkownika o loginie $login.";
+            }
+
+            $idFilePath = $row['id_filepath'];
+            
+            $query = "SELECT filepath FROM files WHERE id = :idFilePath";
+            $statement = $pdo->prepare($query);
+            $statement->bindParam(':idFilePath', $idFilePath, PDO::PARAM_INT);
+            $statement->execute();
+            
+            $row = $statement->fetch(PDO::FETCH_ASSOC);
+
+            if (!$row) {
+                $this->closePDO();
+                return "Nie znaleziono ścieżki do katalogu użytkownika o loginie $login.";
+            }
+
+            $katalog = $row['filepath'];
+            
+            // Generuj unikalną nazwę dla pliku
+            $rozszerzenie = pathinfo($nazwaPliku, PATHINFO_EXTENSION);
+            $nazwaPliku = uniqid('plik_') . '.' . $rozszerzenie;
+
+            // Przenieś plik do docelowego katalogu
+            if (move_uploaded_file($tmpPliku, $katalog . $nazwaPliku)) {
+                $this->closePDO();
+                return "Plik został przesłany i zapisany jako: $nazwaPliku";
+            } else {
+                $this->closePDO();
+                return "Wystąpił błąd podczas zapisywania pliku.";
+            }
+        } catch (PDOException $e) {
+            $this->closePDO();
+            die("Błąd podczas wgrywania pliku: " . $e->getMessage());
+        }
+    }
+
+    public function pobierzSciezkeKataloguDlaUzytkownika($login)
+{
+    $pdo = $this->startPDO();
+
+    try {
+        // Utwórz zapytanie SQL, aby pobrać ścieżkę katalogu dla użytkownika na podstawie loginu
+        $query = "SELECT id_filepath FROM user WHERE login = :login";
+        $statement = $pdo->prepare($query);
+        $statement->bindParam(':login', $login, PDO::PARAM_STR);
+        $statement->execute();
+
+        $row = $statement->fetch(PDO::FETCH_ASSOC);
+
+        if ($row) {
+            $idFilePath = $row['id_filepath'];
+            
+        } else {
+            $idFilePath = "/"; // Domyślna wartość, jeśli nie znaleziono odpowiednich danych w bazie danych
+        }
+
+        $this->closePDO();
+        return $idFilePath;
+    } catch (PDOException $e) {
+        $this->closePDO();
+        die("Błąd podczas pobierania ścieżki katalogu: " . $e->getMessage());
+    }
+}
+
 }
 ?>
