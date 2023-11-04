@@ -78,6 +78,20 @@ class logowanie extends database
             $_SESSION['zalogowany'] = true; // Ustaw sesję, że użytkownik jest zalogowany
             $_SESSION['uzytkownik'] = $login; // Przechowaj login zalogowanego użytkownika
             $_SESSION['filePatch'] = $this -> dwlFilePatch($login);
+
+            try { 
+            $query = "SELECT * FROM user WHERE login = :login"; 
+            $statement = $this -> pdo->prepare($query);
+            $statement->bindParam(':login', $login, PDO::PARAM_STR);
+            $statement->execute();
+            $wynik = $statement->fetch(PDO::FETCH_ASSOC);
+            $_SESSION['id_user'] = $wynik['id'];
+            $this->closePDO();
+        } catch (PDOException $e) {
+            $this->closePDO();
+            die("Błąd podczas wykonywania zapytania: " . $e->getMessage());
+        }
+
             header("Location: druga_strona.php"); // Przekieruj na drugą stronę
             exit();
         } else {

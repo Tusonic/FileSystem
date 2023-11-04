@@ -24,55 +24,64 @@ class plik extends database
         }
     }
 
-    public function wgrajPlik($login, $nazwaPliku, $tmpPliku)
+    public function wgrajPlik()
     {
         $pdo = $this->startPDO();
 
-        try {
-            $query = "SELECT id_filepath FROM user WHERE login = :login";
-            $statement = $pdo->prepare($query);
-            $statement->bindParam(':login', $login, PDO::PARAM_STR);
-            $statement->execute();
+        if (isset($_SESSION['zalogowany']) && $_SESSION['zalogowany'] === true) {
+    $login = $_SESSION['uzytkownik']; // Pobierz login zalogowanego użytkownika
 
-            $row = $statement->fetch(PDO::FETCH_ASSOC);
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $plik = new plik();
+       // $katalog = $plik->pobierzSciezkeKataloguDlaUzytkownika($login); // Pobierz ścieżkę katalogu z bazy danych
+       $katalog = ".". $_SESSION['filePatch'];
 
-            if (!$row) {
+        // Sprawdź, czy plik został przesłany bez błędów
+        if ($_FILES['plik']['error'] === UPLOAD_ERR_OK) {
+            $nazwa_pliku = $_FILES['plik']['name']; // Pobierz oryginalną nazwę pliku
+
+            // Zamień spacje na podłogi "_" w nazwie pliku
+            $nazwa_pliku = str_replace(' ', '_', $nazwa_pliku);
+
+            // Wygeneruj 4 losowe znaki
+            $losowe_znaki = substr(str_shuffle('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'), 0, 4);
+
+            // Dodaj losowe znaki na końcu nazwy pliku
+            $nazwa_pliku = pathinfo($nazwa_pliku, PATHINFO_FILENAME) . $losowe_znaki . '.' . pathinfo($nazwa_pliku, PATHINFO_EXTENSION);
+
+            // Przenieś plik do docelowego katalogu z nową nazwą
+            if (move_uploaded_file($_FILES['plik']['tmp_name'], $katalog . $nazwa_pliku)) {
+
+               // $id_user = $_SESSION['id_user'];
+                $query = "INSERT INTO files (id, filename, userID) VALUES (NULL, '$nazwa_pliku', '".$_SESSION['id_user']."')";
+                $statement = $pdo->prepare($query);
+                $statement->execute();
                 $this->closePDO();
-                return "Nie znaleziono użytkownika o loginie $login.";
-            }
 
-            $idFilePath = $row['id_filepath'];
-            
-            $query = "SELECT filepath FROM files WHERE id = :idFilePath";
-            $statement = $pdo->prepare($query);
-            $statement->bindParam(':idFilePath', $idFilePath, PDO::PARAM_INT);
-            $statement->execute();
-            
-            $row = $statement->fetch(PDO::FETCH_ASSOC);
-
-            if (!$row) {
-                $this->closePDO();
-                return "Nie znaleziono ścieżki do katalogu użytkownika o loginie $login.";
-            }
-
-            $katalog = $row['filepath'];
-            
-            // Generuj unikalną nazwę dla pliku
-            $rozszerzenie = pathinfo($nazwaPliku, PATHINFO_EXTENSION);
-            $nazwaPliku = uniqid('plik_') . '.' . $rozszerzenie;
-
-            // Przenieś plik do docelowego katalogu
-            if (move_uploaded_file($tmpPliku, $katalog . $nazwaPliku)) {
-                $this->closePDO();
-                return "Plik został przesłany i zapisany jako: $nazwaPliku";
+                echo "Plik został przesłany i zapisany jako: $nazwa_pliku";
             } else {
-                $this->closePDO();
-                return "Wystąpił błąd podczas zapisywania pliku.";
+                echo "Wystąpił błąd podczas zapisywania pliku.";
             }
-        } catch (PDOException $e) {
-            $this->closePDO();
-            die("Błąd podczas wgrywania pliku: " . $e->getMessage());
+        } else {
+            echo "Wystąpił błąd podczas przesyłania pliku.";
         }
     }
+
+    echo "<p>Witaj, $login! Jesteś zalogowany i możesz wgrać plik.</p>";
+
+    // Link do wylogowania
+    echo '<p><a href="wyloguj.php">Wyloguj się</a></p>';
+} else {
+    echo 'Nie jesteś zalogowany.';
 }
-?>
+      
+        
+
+    }
+
+
+
+}
+
+
+

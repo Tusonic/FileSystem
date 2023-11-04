@@ -4,8 +4,9 @@ require_once 'config/loader.php';
 $logowanie = new logowanie();
 $logowanie->test();
 
+
 // Sprawdź, czy formularz logowania został przesłany
- if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $login = $_POST['login'];
     $pass = $_POST['pass'];
     $komunikat = $logowanie->logowanieUzytkownika($login, $pass);
@@ -15,10 +16,12 @@ $logowanie->test();
 
 <!DOCTYPE html>
 <html lang="pl">
+
 <head>
     <meta charset="UTF-8">
     <title>Logowanie</title>
 </head>
+
 <body>
     <h1>Logowanie</h1>
     <form method="POST">
@@ -34,6 +37,7 @@ $logowanie->test();
     <?php if (!empty($komunikat)) {
         echo "<p>$komunikat</p>";
     } ?>
-  
+
 </body>
+
 </html>
