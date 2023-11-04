@@ -9,7 +9,7 @@ if (isset($_SESSION['zalogowany']) && $_SESSION['zalogowany'] === true) {
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $plik = new plik();
        // $katalog = $plik->pobierzSciezkeKataloguDlaUzytkownika($login); // Pobierz ścieżkę katalogu z bazy danych
-       $katalog = "plik/0002";
+       $katalog = ".". $_SESSION['filePatch'];
 
         // Sprawdź, czy plik został przesłany bez błędów
         if ($_FILES['plik']['error'] === UPLOAD_ERR_OK) {
