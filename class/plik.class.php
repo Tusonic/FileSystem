@@ -6,17 +6,14 @@ class plik extends database
         $pdo = $this->startPDO();
 
         try {
-            $query = "SELECT filename, filepath FROM files WHERE group_id = (SELECT team FROM user WHERE login = :login)";
+            $query = "SELECT filename FROM files WHERE userID = (SELECT id FROM user WHERE login = :login)";
             $statement = $pdo->prepare($query);
             $statement->bindParam(':login', $login, PDO::PARAM_STR);
             $statement->execute();
 
             $pliki = array();
             while ($row = $statement->fetch(PDO::FETCH_ASSOC)) {
-                $pliki[] = array(
-                    'filename' => $row['filename'],
-                    'filepath' => $row['filepath']
-                );
+                array_push($pliki, $row['filename']);
             }
 
             $this->closePDO();
@@ -77,34 +74,5 @@ class plik extends database
             die("Błąd podczas wgrywania pliku: " . $e->getMessage());
         }
     }
-
-    public function pobierzSciezkeKataloguDlaUzytkownika($login)
-{
-    $pdo = $this->startPDO();
-
-    try {
-        // Utwórz zapytanie SQL, aby pobrać ścieżkę katalogu dla użytkownika na podstawie loginu
-        $query = "SELECT id_filepath FROM user WHERE login = :login";
-        $statement = $pdo->prepare($query);
-        $statement->bindParam(':login', $login, PDO::PARAM_STR);
-        $statement->execute();
-
-        $row = $statement->fetch(PDO::FETCH_ASSOC);
-
-        if ($row) {
-            $idFilePath = $row['id_filepath'];
-            
-        } else {
-            $idFilePath = "/"; // Domyślna wartość, jeśli nie znaleziono odpowiednich danych w bazie danych
-        }
-
-        $this->closePDO();
-        return $idFilePath;
-    } catch (PDOException $e) {
-        $this->closePDO();
-        die("Błąd podczas pobierania ścieżki katalogu: " . $e->getMessage());
-    }
-}
-
 }
 ?>

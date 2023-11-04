@@ -8,17 +8,16 @@ if (isset($_SESSION['zalogowany']) && $_SESSION['zalogowany'] === true) {
     $pliki = (new plik())->pobierzPlikiUzytkownika($login);
     
     // do debugowania, sprawdza sciezke
-    $plikisrc = new plik();
-    $sciezkadopliku = $plikisrc->pobierzSciezkeKataloguDlaUzytkownika($login);
-    echo $sciezkadopliku;
- 
+    print_r($_SESSION['filePatch']);
+   
  
     // Wyświetl pliki przypisane do użytkownika
     echo "Witaj, $login! Twoje pliki:<br>";
+    
     foreach ($pliki as $plik) {
-        $filename = $plik['filename'];
-        $filepath = $plik['filepath'];
-        echo "<a href='$filepath'>$filename</a><br>";
+        $filename = $plik;
+        $filepath = $_SESSION['filePatch'];
+        echo "<a href='$filepath" . "$plik'>$filename</a><br>";
     }
 
     // Wylogowanie
