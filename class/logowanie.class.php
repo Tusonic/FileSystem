@@ -2,103 +2,66 @@
 
 class logowanie extends database
 {
-    private $pdo;
-    public function test()
+    public function CheckIfUserExists($username, $password)
     {
-        echo 'Logowanie MD5 true/false </br>';
-    }
-
-    private function czyUzytkownikIstnieje($login, $pass)
-    {
-        // Pobierz połączenie PDO z klasy bazowej
-        
-
+        $pdo = $this->startPDO();
         try {
-            // Utwórz zapytanie SQL, które sprawdzi, czy użytkownik o podanym loginie i zahaszowanym haśle istnieje
-            $query = "SELECT COUNT(*) AS ilosc FROM user WHERE login = :login AND pass = :pass"; 
-
-            // Haszujemy hasło MD5
-            $hashedPassword = md5($pass);
-
-            // Przygotuj i wykonaj zapytanie z parametrami
-            $statement = $this -> pdo->prepare($query);
-            $statement->bindParam(':login', $login, PDO::PARAM_STR);
+            $query = "SELECT COUNT(*) AS quantity FROM user WHERE login = :login AND pass = :pass"; 
+            $hashedPassword = md5($password);
+            $statement = $pdo->prepare($query);
+            $statement->bindParam(':login', $username, PDO::PARAM_STR);
             $statement->bindParam(':pass', $hashedPassword, PDO::PARAM_STR); 
             $statement->execute();
+            $result = $statement->fetch(PDO::FETCH_ASSOC);
 
-            // Pobierz wynik zapytania
-            $wynik = $statement->fetch(PDO::FETCH_ASSOC);
-       
-
-            // Jeśli istnieje użytkownik o podanym loginie i zahaszowanym haśle, zwróć true
-            if ($wynik['ilosc'] > 0) {
-                $this->closePDO();
-                return true;
+            if ($result['quantity'] > 0) {
+                return true; // Użytkownik istnieje
+            } else {
+                return false; // Użytkownik nie istnieje
             }
-
-            $this->closePDO();
-            return false;
         } catch (PDOException $e) {
-            $this->closePDO();
             die("Błąd podczas wykonywania zapytania: " . $e->getMessage());
         }
     }
 
-    private function dwlFilePatch($login) {
-        // Pobierz połączenie PDO z klasy bazowej
-        try {
-            // Utwórz zapytanie SQL, które sprawdzi, czy użytkownik o podanym loginie i zahaszowanym haśle istnieje
-            $query = "SELECT * FROM user WHERE login = :login"; 
-
-            // Przygotuj i wykonaj zapytanie z parametrami
-            $statement = $this -> pdo->prepare($query);
-            $statement->bindParam(':login', $login, PDO::PARAM_STR);
-            $statement->execute();
-
-            // Pobierz wynik zapytania
-            $wynik = $statement->fetch(PDO::FETCH_ASSOC);
-
-            $this->closePDO();
-
-            return $wynik['id_filepath'];
-        } catch (PDOException $e) {
-            $this->closePDO();
-            die("Błąd podczas wykonywania zapytania: " . $e->getMessage());
-        }
-    }
-
-    public function logowanieUzytkownika($login, $pass) 
+    public function FetchVariables($username, $password)
     {
-       
-        $this -> pdo = $this->startPDO();
-        $istnieje = $this->czyUzytkownikIstnieje($login, $pass);
+        $pdo = $this->startPDO();
         
-        if ($istnieje) {
-            session_start();
-            $_SESSION['zalogowany'] = true; // Ustaw sesję, że użytkownik jest zalogowany
-            $_SESSION['uzytkownik'] = $login; // Przechowaj login zalogowanego użytkownika
-            $_SESSION['filePatch'] = $this -> dwlFilePatch($login);
-
-            try { 
+        if (!$this->CheckIfUserExists($username, $password)) {
+            $this->closePDO(); // Zamykanie bazy
+            return 0; // Użytkownik nie istnieje
+        }
+    
+        try { 
             $query = "SELECT * FROM user WHERE login = :login"; 
-            $statement = $this -> pdo->prepare($query);
-            $statement->bindParam(':login', $login, PDO::PARAM_STR);
+            $statement = $pdo->prepare($query);
+            $statement->bindParam(':login', $username, PDO::PARAM_STR);
             $statement->execute();
-            $wynik = $statement->fetch(PDO::FETCH_ASSOC);
-            $_SESSION['id_user'] = $wynik['id'];
-            $this->closePDO();
+            $result = $statement->fetch(PDO::FETCH_ASSOC);
+    
+            if ($result) {
+                $_SESSION['user_id'] = $result['id'];
+                // Tutaj dodaj pozostałe zmienne sesji, jeśli to potrzebne
+            } else {
+                return 0; // Użytkownik istnieje w bazie, ale nie udało się pobrać danych
+            }
         } catch (PDOException $e) {
-            $this->closePDO();
-            die("Błąd podczas wykonywania zapytania: " . $e->getMessage());
+            $this->closePDO(); //zamykanie bazy
+            return -1; // Wystąpił wyjątek podczas wykonywania zapytania
+            // die("Błąd podczas wykonywania zapytania: " . $e->getMessage());
+        } finally {
+            // PDO zamykam we wszystkich opcjach 
         }
 
-            header("Location: druga_strona.php"); // Przekieruj na drugą stronę
-            exit();
-        } else {
-            $komunikat = 'Niepoprawne dane logowania.';
-            return $komunikat;
-        
-        }
+        $this->closePDO();
+        return 1; // Pobieranie danych zakończone sukcesem
+    }
+
+    public function FetchFilePath ($resul1)
+    {
         
     }
+
+
 }
