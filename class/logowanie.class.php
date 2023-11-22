@@ -29,8 +29,8 @@ class logowanie extends database
         $pdo = $this->startPDO();
         
         if (!$this->CheckIfUserExists($username, $password)) {
-            $this->closePDO(); // Zamykanie bazy
-            return 0; // Użytkownik nie istnieje
+            $this->closePDO(); 
+            return 0; 
         }
     
         try { 
@@ -41,8 +41,13 @@ class logowanie extends database
             $result = $statement->fetch(PDO::FETCH_ASSOC);
     
             if ($result) {
-                $_SESSION['user_id'] = $result['id'];
+                $_SESSION['id'] = $result['id'];
+                $_SESSION['filepath'] = $result['filepath'];
+                $_SESSION['login'] = $result['login'];
+                $_SESSION['access'] = true;
+
                 // Tutaj dodaj pozostałe zmienne sesji, jeśli to potrzebne
+				
             } else {
                 return 0; // Użytkownik istnieje w bazie, ale nie udało się pobrać danych
             }
@@ -57,11 +62,5 @@ class logowanie extends database
         $this->closePDO();
         return 1; // Pobieranie danych zakończone sukcesem
     }
-
-    public function FetchFilePath ($resul1)
-    {
-        
-    }
-
 
 }
